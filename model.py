@@ -101,7 +101,6 @@ import threading
 import requests
 from dashboard import promethus_grafana
 from loguru import logger
-from huggingface_hub import HfFolder, login
 import numpy as np
 from function_ml import connect_project, download_dataset, upload_checkpoint
 from logging_class import start_queue, write_log
@@ -109,6 +108,14 @@ from prompt import qa_without_context
 import time
 from mcp.server.fastmcp import FastMCP
 import zipfile
+from huggingface_hub import (
+    HfFolder, 
+    login,
+    whoami,
+    ModelCard,
+    upload_file,
+    create_repo
+)
 
 hf_token = os.getenv("HF_TOKEN", "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")
 HfFolder.save_token(hf_token)
@@ -490,13 +497,14 @@ class MyModel(AIxBlockMLBase):
                 input_field = kwargs.get("input_field", "task_description")
                 output_field = kwargs.get("output_field", "response")
                 log_queue, logging_thread = start_queue(channel_log)
+                epoch = kwargs.get("epoch", 1)
+                batch_size = kwargs.get("batch_size", 1)
                 write_log(log_queue)
                 channel_name = f"{hf_model_id}_{str(uuid.uuid4())[:8]}"
                 username = ""
                 hf_model_name = ""
 
                 try:
-                    from huggingface_hub import whoami
                     user = whoami(token=push_to_hub_token)['name']
                     hf_model_name = f"{user}/{hf_model_id}"
                 except Exception as e:
@@ -531,6 +539,8 @@ class MyModel(AIxBlockMLBase):
                     push_to_hub,
                     push_to_hub_token,
                     host_name,
+                    epoch,
+                    batch_size
                 ):
 
                     dataset_path = None
@@ -602,6 +612,11 @@ class MyModel(AIxBlockMLBase):
 
                     make_dir = os.path.join(os.getcwd(), "checkpoints")
                     os.makedirs(make_dir, exist_ok=True)
+                    subprocess.run(
+                        ("whereis accelerate"),
+                        shell=True,
+                    )
+                    print("===Train===")
 
                     if int(world_size) > 1:
                         if rank == 0:
@@ -620,8 +635,9 @@ class MyModel(AIxBlockMLBase):
                                 "--train_dataset", train_dir,
                                 "--eval_dataset", validation_dir,
                                 "--learning_rate", "1e-6",
+                                "--batch_size", batch_size,
                                 "--warmup_steps", "100",
-                                "--max_epochs", "10",
+                                "--max_epochs", epoch,
                                 "--patience", "5",
                                 "--model_name", "seamlessM4T_medium",
                                 "--save_model_to", f"{make_dir}/checkpoint.pt"
@@ -642,8 +658,9 @@ class MyModel(AIxBlockMLBase):
                                 "--train_dataset", train_dir,
                                 "--eval_dataset", validation_dir,
                                 "--learning_rate", "1e-6",
+                                "--batch_size", batch_size,
                                 "--warmup_steps", "100",
-                                "--max_epochs", "10",
+                                "--max_epochs", epoch,
                                 "--patience", "5",
                                 "--model_name", "seamlessM4T_medium",
                                 "--save_model_to", f"{make_dir}/checkpoint.pt"
@@ -653,19 +670,102 @@ class MyModel(AIxBlockMLBase):
                             "venv/bin/m4t_finetune",
                             "--train_dataset", train_dir,
                             "--eval_dataset", validation_dir,
-                            "--batch_size", "1",
+                            "--batch_size", batch_size,
                             "--eval_steps", "1000",
                             "--learning_rate", "0.00005",
                             "--patience", "10",
+                            "--max_epochs", epoch,
                             "--model_name", "seamlessM4T_medium",
                             "--save_model_to", f"{make_dir}/checkpoint.pt"
                         ], check=True)
+                    
+                    checkpoint_path = os.path.join(make_dir, "checkpoint.pt")
 
-                    subprocess.run(
-                        ("whereis accelerate"),
-                        shell=True,
+                    user = whoami(token=push_to_hub_token)['name']
+                    repo_id = f"{user}/{hf_model_id}"
+
+                    # Nếu repo chưa tồn tại, tạo mới
+                    create_repo(repo_id=repo_id, token=push_to_hub_token, exist_ok=True)
+
+                    # Tạo ModelCard metadata (nếu chưa có)
+                    try:
+                        card = ModelCard.load(repo_id, token=push_to_hub_token)
+                    except Exception:
+                        card = ModelCard("")
+
+                    if not card.text.lstrip().startswith("---"):
+                        yaml_metadata = (
+                            "---\n"
+                            "license: apache-2.0\n"
+                            "language: en\n"
+                            "tags:\n"
+                            "  - speech\n"
+                            "  - translation\n"
+                            f"model_name: {hf_model_id}\n"
+                            "---\n\n"
+                        )
+                        card.text = yaml_metadata + card.text
+
+                    # Bổ sung phần Citations
+                    sections = card.text.split("## ")
+                    new_sections = []
+                    for section in sections:
+                        if section.lower().startswith("citations"):
+                            new_section = (
+                                "Citations\n\n"
+                                "This model was fine-tuned using custom data and training scripts.\n\n"
+                                "© 2025 YourTeamName. All rights reserved.\n"
+                            )
+                            new_sections.append(new_section)
+                        else:
+                            new_sections.append(section)
+                    card.text = "## ".join(new_sections)
+
+                    # Save ModelCard locally
+                    readme_path = "README.md"
+                    with open(readme_path, "w") as f:
+                        f.write(card.text)
+
+                    # Upload README.md
+                    upload_file(
+                        path_or_fileobj=readme_path,
+                        path_in_repo="README.md",
+                        repo_id=repo_id,
+                        token=push_to_hub_token,
+                        commit_message="Upload README"
                     )
-                    print("===Train===")
+                    fallback_path = os.path.join(os.getcwd(), "tokenizer.model")
+
+                    # Kiểm tra trong checkpoints/
+                    checkpoints_path = os.path.join(os.getcwd(), "checkpoints", "tokenizer.model")
+
+                    # Nếu file tồn tại ở checkpoints thì dùng
+                    if os.path.exists(checkpoints_path):
+                        tokenizer_model_path = checkpoints_path
+                    else:
+                        tokenizer_model_path = fallback_path
+
+                    print("✅ Dùng tokenizer tại:", tokenizer_model_path)
+
+                    upload_file(
+                        path_or_fileobj=tokenizer_model_path,
+                        path_in_repo="tokenizer.model",
+                        repo_id=repo_id,
+                        token=push_to_hub_token,
+                        commit_message="Upload tokenizer"
+                    )
+
+                    # ✅ Upload checkpoint (đặt tên chuẩn theo Transformers nếu có thể)
+                    upload_file(
+                        path_or_fileobj=checkpoint_path,
+                        path_in_repo="seamlessM4T_medium.pt",
+                        repo_id=repo_id,
+                        token=push_to_hub_token,
+                        commit_message="Upload fine-tuned checkpoint"
+                    )
+
+                    print("✅ Đã upload README.md và checkpoint lên Hugging Face Hub!")
+                    
 
                     CHANNEL_STATUS[channel_name]["status"] = "done"
                     output_dir = "./data/checkpoint"
@@ -703,6 +803,8 @@ class MyModel(AIxBlockMLBase):
                         push_to_hub,
                         push_to_hub_token,
                         host_name,
+                        epoch,
+                        batch_size
                     ),
                 )
                 train_thread.start()
