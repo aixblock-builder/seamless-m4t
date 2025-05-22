@@ -19,7 +19,6 @@ appdirs
 gitpython
 centrifuge-python
 opencv-python>=4.1.1
-numpy
 grafana-api
 diffusers
 simuleval
@@ -40,13 +39,9 @@ rich
 peft
 trl
 scipy
-flask_swagger_ui
 huggingface_hub[hf_xet]
 apscheduler
 fastapi
 uvicorn
 mcp
-torch==2.6.0 --index-url https://download.pytorch.org/whl/cu126
-torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu126
-torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu126
 git+https://github.com/facebookresearch/seamless_communication.git
