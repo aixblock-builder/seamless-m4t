@@ -7,13 +7,13 @@ from grafana_api.grafana_face import GrafanaFace
 from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 from prometheus_client.exposition import basic_auth_handler
 
-GRAFANA_URL = '149.28.73.86:9091'
-PROMETHUS_URL = '149.28.73.86:9001'
-GRAFANA_API = '149.28.73.86:3000'
-LOKI_API = '149.28.73.86:3100'
+GRAFANA_URL = '207.246.109.178:9091'
+PROMETHUS_URL = '207.246.109.178:9001'
+GRAFANA_API = '207.246.109.178:3005'
+LOKI_API = '207.246.109.178:3100'
 # docker run -d --name=loki --mount source=loki-data,target=/loki -p 3100:3100 grafana/loki
 GRAFANA_USERNAME = 'admin'
-GRAFANA_PASSWORD = 'admin'
+GRAFANA_PASSWORD = 'admin123@'
 
 
 class Promethus_Grafana:
@@ -491,12 +491,12 @@ class Promethus_Grafana:
 
         return link_url
 
-try:
-    promethus_grafana = Promethus_Grafana(
-        host_grafana=f"http://{GRAFANA_API}", url_grafana=GRAFANA_API, url_promethus=PROMETHUS_URL)
+# try:
+#     promethus_grafana = Promethus_Grafana(
+#         host_grafana=f"http://{GRAFANA_API}", url_grafana=GRAFANA_API, url_promethus=PROMETHUS_URL)
 
-    promethus_grafana.create_dashboard(
-        "ML_monitor_2", "Training Job", "flask-1", ["ml_m4t"])
-    print(promethus_grafana.generate_link_public('ml_m4t'))
-except Exception as e:
-    print(e)
+#     promethus_grafana.create_dashboard(
+#         "ML_monitor_2", "Training Job", "flask-1", ["ml_m4t"])
+#     print(promethus_grafana.generate_link_public('ml_m4t'))
+# except Exception as e:
+#     print(e)

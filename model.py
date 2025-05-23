@@ -99,7 +99,7 @@ import json
 import subprocess
 import threading
 import requests
-from dashboard import promethus_grafana
+# from dashboard import promethus_grafana
 from loguru import logger
 import numpy as np
 from function_ml import connect_project, download_dataset, upload_checkpoint
@@ -848,8 +848,8 @@ class MyModel(AIxBlockMLBase):
                 if not data: 
                     data = kwargs.get("data", "")
                     
-                source_language = kwargs.get("source","")
-                target_language = kwargs.get("target","")
+                source_language = kwargs.get("source","en")
+                target_language = kwargs.get("target","en")
                 prompt = kwargs.get("prompt", "")
                 model_id = kwargs.get("model_id", "")
 
@@ -1136,7 +1136,6 @@ class MyModel(AIxBlockMLBase):
                     import matplotlib as mpl
                     import matplotlib.pyplot as plt
                     # import mmap
-                    import numpy
                     import soundfile
                     import torchaudio
                     import torch
@@ -1539,7 +1538,7 @@ class MyModel(AIxBlockMLBase):
     def model(self, **kwargs):
         
         import gradio as gr 
-        task = kwargs.get("task", "")
+        task = kwargs.get("task", "text-to-speech-translation")
 
         # def load_model():
         from seamless_communication.inference import Translator
@@ -1669,13 +1668,12 @@ class MyModel(AIxBlockMLBase):
                     # )
                     print(f"file_path:{file_path} out_text:{out_text}")
                     return file_path, out_text #(int(AUDIO_SAMPLE_RATE), out_wav)
-
+        
         def run_s2tt(input_audio: str,input_audio_mic: str, source_language: str, target_language: str) -> str:
-            # translator = load_model()
-
             if input_audio_mic != None:
                 #  preprocess_audio(input_audio_mic)
                  input_audio=input_audio_mic
+            preprocess_audio(input_audio)
             source_language_code = LANGUAGE_NAME_TO_CODE[source_language]
             target_language_code = LANGUAGE_NAME_TO_CODE[target_language]
             out_texts, _ = translator.predict(
@@ -1812,12 +1810,12 @@ class MyModel(AIxBlockMLBase):
                     input_audio_mic = gr.Audio(
                         label="Input speech",
                         type="filepath",
-                        source="microphone",
+                        sources="microphone",
                     )
                     input_audio_file = gr.Audio(
                         label="Input speech",
                         type="filepath",
-                        source="upload",
+                        sources="upload",
                     )
                 with gr.Column():
                     with gr.Group():
@@ -1986,12 +1984,12 @@ class MyModel(AIxBlockMLBase):
                             input_audio_mic = gr.Audio(
                                 label="Input speech",
                                 type="filepath",
-                                source="microphone",
+                                sources="microphone",
                             )
                             input_audio_file = gr.Audio(
                                 label="Input speech",
                                 type="filepath",
-                                source="upload",
+                                sources="upload",
                             )
                         # input_audio = gr.Audio(label="Input speech", type="filepath")
                             target_language = gr.Dropdown(
@@ -2036,29 +2034,29 @@ class MyModel(AIxBlockMLBase):
             gr.Markdown(DESCRIPTION)
 
             with gr.Tabs():
-                if task == "speech-to-speech-translation":
+                # if task == "speech-to-speech-translation":
                     with gr.Tab(label="S2ST"):
                         demo_s2st.render()
-                elif task == "speech-to-text-translation":
+                # elif task == "speech-to-text-translation":
                     with gr.Tab(label="S2TT"):
                         demo_s2tt.render()
-                elif task == "text-to-speech-translation":
+                # elif task == "text-to-speech-translation":
                     with gr.Tab(label="T2ST"):
                         demo_t2st.render()
-                elif task == "text-to-text-translation":
+                # elif task == "text-to-text-translation":
                     with gr.Tab(label="T2TT"):
                         demo_t2tt.render()
-                elif task == "automatic-speech-recognition-segment":
+                # elif task == "automatic-speech-recognition-segment":
                     with gr.Tab(label="ASR"):
                         demo_asr.render()
-                elif task == "automatic-speech-recognition":
-                    with gr.Tab(label="ASR"):
-                        demo_asr.render()
-                elif task == "translation":
-                    with gr.Tab(label="T2TT"):
-                        demo_t2tt.render()
-                else:
-                    return {"share_url": "", 'local_url': ""}
+                # elif task == "automatic-speech-recognition":
+                    # with gr.Tab(label="ASR"):
+                    #     demo_asr.render()
+                # elif task == "translation":
+                    # with gr.Tab(label="T2TT"):
+                    #     demo_t2tt.render()
+                # else:
+                #     return {"share_url": "", 'local_url': ""}
                         
 
         gradio_app, local_url, share_url = demo.launch(share=True, quiet=True, prevent_thread_lock=True, server_name='0.0.0.0',show_error=True)
