@@ -668,15 +668,15 @@ class MyModel(AIxBlockMLBase):
                             "venv/bin/m4t_finetune",
                             "--train_dataset", train_dir,
                             "--eval_dataset", validation_dir,
-                            "--batch_size", batch_size,
+                            "--batch_size", str(batch_size),
                             "--eval_steps", "1000",
                             "--learning_rate", "0.00005",
                             "--patience", "10",
-                            "--max_epochs", epoch,
+                            "--max_epochs", str(epoch),
                             "--model_name", "seamlessM4T_medium",
                             "--save_model_to", f"{make_dir}/checkpoint.pt"
                         ], check=True)
-                    
+
                     checkpoint_path = os.path.join(make_dir, "checkpoint.pt")
 
                     user = whoami(token=push_to_hub_token)['name']
