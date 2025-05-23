@@ -491,10 +491,12 @@ class Promethus_Grafana:
 
         return link_url
 
+try:
+    promethus_grafana = Promethus_Grafana(
+        host_grafana=f"http://{GRAFANA_API}", url_grafana=GRAFANA_API, url_promethus=PROMETHUS_URL)
 
-promethus_grafana = Promethus_Grafana(
-    host_grafana=f"http://{GRAFANA_API}", url_grafana=GRAFANA_API, url_promethus=PROMETHUS_URL)
-
-promethus_grafana.create_dashboard(
-    "ML_monitor_2", "Training Job", "flask-1", ["ml_llama3"])
-print(promethus_grafana.generate_link_public('ml_llama3'))
+    promethus_grafana.create_dashboard(
+        "ML_monitor_2", "Training Job", "flask-1", ["ml_m4t"])
+    print(promethus_grafana.generate_link_public('ml_m4t'))
+except Exception as e:
+    print(e)
