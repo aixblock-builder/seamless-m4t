@@ -28,7 +28,7 @@ import uuid
 import torch
 # https://gitee.com/hf-models/seamless-m4t-v2-large?skip_mobile=true
 # from transformers import AutoProcessor, SeamlessM4Tv2Model
-# import torchaudio
+import torchaudio
 
 # processor = AutoProcessor.from_pretrained("facebook/seamless-m4t-v2-large")
 # model = SeamlessM4Tv2Model.from_pretrained("facebook/seamless-m4t-v2-large")
@@ -91,9 +91,7 @@ import torch
 from typing import List, Dict, Optional
 from aixblock_ml.model import AIxBlockMLBase
 import torch.distributed as dist
-import os
 import torch
-import os
 import subprocess
 import json
 import subprocess
@@ -833,7 +831,7 @@ class MyModel(AIxBlockMLBase):
             return {"Share_url": link}
           
         elif command.lower() == "predict":
-                import torch
+                # import torch
                 from seamless_communication.inference import Translator
                 local_model_path = '/app/models-hf/facebook/seamless-m4t-v2-large'
                 translator = Translator(
@@ -869,7 +867,7 @@ class MyModel(AIxBlockMLBase):
                 def decode_base64_to_audio(base64_audio, output_file="output.wav"):
                         # Giải mã Base64 thành nhị phân
                         import base64
-                        import os  
+                        # import os  
                         file_path = os.path.join(os.path.dirname(__file__), output_file)
                         audio_data = base64.b64decode(base64_audio)
                         
@@ -902,7 +900,7 @@ class MyModel(AIxBlockMLBase):
                 else:
                     input_audio= decode_base64_to_audio(base64_audio=data)
                 def preprocess_audio(input_audio: str) -> None:
-                    import torchaudio
+                    # import torchaudio
                     arr, org_sr = torchaudio.load(input_audio)
                     
                     new_arr = torchaudio.functional.resample(arr, orig_freq=org_sr, new_freq=AUDIO_SAMPLE_RATE)
@@ -934,7 +932,7 @@ class MyModel(AIxBlockMLBase):
                 def run_s2st(
                     input_audio: str, source_language: str, target_language: str
                 ) -> tuple[tuple[int, np.ndarray] | None, str]:
-                    import torchaudio
+                    # import torchaudio
                     preprocess_audio(input_audio)
                     source_language_code = LANGUAGE_NAME_TO_CODE[source_language]
                     target_language_code = LANGUAGE_NAME_TO_CODE[target_language]
@@ -980,7 +978,7 @@ class MyModel(AIxBlockMLBase):
 
 
                 def run_t2st(input_text: str, source_language: str, target_language: str) -> tuple[tuple[int, np.ndarray] | None, str]:
-                    import torchaudio
+                    # import torchaudio
                     source_language_code = LANGUAGE_NAME_TO_CODE[source_language]
                     target_language_code = LANGUAGE_NAME_TO_CODE[target_language]
                     
@@ -1065,7 +1063,7 @@ class MyModel(AIxBlockMLBase):
                         # Lưu file
                         with open(file_path, "wb") as f:
                             f.write(response.content)
-                    import torchaudio
+                    # import torchaudio
                     audio_input, _ = torchaudio.load(audio_file) # Load waveform using torchaudio
 
                     s2st_model = torch.jit.load(file_path)
@@ -1132,13 +1130,13 @@ class MyModel(AIxBlockMLBase):
                     from simuleval.agents.states import AgentStates
 
                     import io
-                    import json
+                    # import json
                     import matplotlib as mpl
                     import matplotlib.pyplot as plt
                     # import mmap
                     import soundfile
-                    import torchaudio
-                    import torch
+                    # import torchaudio
+                    # import torch
 
                     from collections import defaultdict
                     from IPython.display import Audio, display
@@ -1242,12 +1240,12 @@ class MyModel(AIxBlockMLBase):
                             ax.set_yticks([])
 
                         axes[0].plot(
-                            numpy.linspace(0, len(source_samples) / source_fs, len(source_samples)),
+                            np.linspace(0, len(source_samples) / source_fs, len(source_samples)),
                             source_samples,
                         )
 
                         axes[1].plot(
-                            numpy.linspace(0, len(target_samples) / target_fs, len(target_samples)),
+                            np.linspace(0, len(target_samples) / target_fs, len(target_samples)),
                             target_samples,
                         )
 
@@ -1264,12 +1262,12 @@ class MyModel(AIxBlockMLBase):
 
                             # Uncomment this if you want to see the segments without speech playback delay
                             axes[2].plot(
-                                offset / 1000 + numpy.linspace(0, len(samples) / target_fs, len(samples)),
-                                -seg_index * 0.05 + numpy.array(samples),
+                                offset / 1000 + np.linspace(0, len(samples) / target_fs, len(samples)),
+                                -seg_index * 0.05 + np.array(samples),
                             )
                             axes[4].plot(
-                                start / 1000 + numpy.linspace(0, len(samples) / target_fs, len(samples)),
-                                numpy.array(samples),
+                                start / 1000 + np.linspace(0, len(samples) / target_fs, len(samples)),
+                                np.array(samples),
                             )
 
                         from pydub import AudioSegment
@@ -1621,7 +1619,7 @@ class MyModel(AIxBlockMLBase):
         #     print(f"file_path:{file_path} out_text:{out_text}")
         #     return file_path, out_text
         def preprocess_audio(input_audio: str) -> None:
-                    import torchaudio
+                    # import torchaudio
                     arr, org_sr = torchaudio.load(input_audio)
                     
                     new_arr = torchaudio.functional.resample(arr, orig_freq=org_sr, new_freq=AUDIO_SAMPLE_RATE)
@@ -1687,7 +1685,7 @@ class MyModel(AIxBlockMLBase):
         def run_t2st(input_text: str, source_language: str, target_language: str) -> tuple[tuple[int, np.ndarray] | None, str]:
             # translator = load_model()
 
-            import torchaudio
+            # import torchaudio
             source_language_code = LANGUAGE_NAME_TO_CODE[source_language]
             target_language_code = LANGUAGE_NAME_TO_CODE[target_language]
             
@@ -2208,7 +2206,7 @@ class MyModel(AIxBlockMLBase):
             def get_checkpoint_list(project):
                 print("GETTING CHECKPOINT LIST")
                 print(f"Proejct: {project}")
-                import os
+                # import os
                 checkpoint_list = [i for i in os.listdir("my_ml_backend/models") if i.endswith(".pt")]
                 checkpoint_list = [f"<a href='./my_ml_backend/checkpoints/{i}' download>{i}</a>" for i in checkpoint_list]
                 if os.path.exists(f"my_ml_backend/{project}"):
